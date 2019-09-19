@@ -5,4 +5,5 @@ func main() {
 
 	// add a block!
 	AddBlock(&chain, "first block name")
+	AddBlock(&chain, "some other random name")
 }

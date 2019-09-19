@@ -69,14 +69,15 @@ func UpdateHash(block *Block) Block {
 // and if not, generate a new hash
 func MineBlock(block Block) Block {
 	start := time.Now()
-	if newBlock := NextNonce(&block); CheckDifficulty("000", newBlock.Hash) {
-		elapsed := time.Since(start)
-		ms := float64(elapsed) / float64(time.Millisecond)
-		fmt.Println(Sprintf(Bold(Cyan("Mined new block in %fms")), Bold(Cyan(ms))))
-		return newBlock
-	} else {
-		return MineBlock(newBlock)
+	newBlock := NextNonce(&block)
+	for !CheckDifficulty("0000", newBlock.Hash) {
+		newBlock = NextNonce(&block)
 	}
+
+	elapsed := time.Since(start)
+	ms := float64(elapsed) / float64(time.Millisecond)
+	fmt.Println(Sprintf(Bold(Cyan("Mined new block in %fms")), Bold(Cyan(ms))))
+	return newBlock
 }
 
 // Add a new block to the current chain
@@ -96,5 +97,5 @@ func AddBlock(chain *[]Block, name string) {
 }
 
 func printSlice(s []Block) {
-	fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
+	//fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
 }

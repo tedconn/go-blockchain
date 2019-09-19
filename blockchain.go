@@ -69,8 +69,7 @@ func UpdateHash(block *Block) Block {
 // and if not, generate a new hash
 func MineBlock(block Block) Block {
 	start := time.Now()
-	newBlock := NextNonce(&block)
-	if CheckDifficulty("000", newBlock.Hash) {
+	if newBlock := NextNonce(&block); CheckDifficulty("000", newBlock.Hash) {
 		elapsed := time.Since(start)
 		ms := float64(elapsed) / float64(time.Millisecond)
 		fmt.Println(Sprintf(Bold(Cyan("Mined new block in %fms")), Bold(Cyan(ms))))

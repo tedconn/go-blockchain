@@ -17,6 +17,13 @@ type Block struct {
 	Nonce        int
 }
 
+// some dude said online that an individual goroutine
+// (depending on what it does obviously) can use about 2.5k per goroutine
+// important thing to note is that it's memory bound
+var worker_pools = 500
+
+var total_jobs = 10000
+
 // Every chain has to have the first block right? This is called the genesis block
 // The previous hash for this block is just a hash of "0"
 // and the name is "genesis"
@@ -65,37 +72,45 @@ func UpdateHash(block *Block) Block {
 	return *block
 }
 
-// Mine a given block by checking testing the difficulty
-// and if not, generate a new hash
-func MineBlock(block Block) Block {
-	start := time.Now()
-	newBlock := NextNonce(&block)
-	for !CheckDifficulty("0000", newBlock.Hash) {
-		newBlock = NextNonce(&block)
+// need to remove the chain here
+// just pass in the previous hash
+func MineBlock(id int, jobs <-chan Block, results chan<- Block) {
+	for j := range jobs {
+		if CheckDifficulty("00", j.Hash) {
+			results <- j
+		}
 	}
+}
+
+func AddBlock(name string, previousHash string) (mined Block) {
+	start := time.Now()
+	block := Block{
+		Name:         "new name", // get from input
+		Timestamp:    time.Now(),
+		PreviousHash: previousHash,
+		Nonce:        0,
+	}
+
+	// set up some worker pools and
+	// set up some jobs to run in them
+	jobs := make(chan Block, 100)
+	results := make(chan Block, 100)
+
+	// spawn the workers
+	for w := 1; w <= worker_pools; w++ {
+		go MineBlock(w, jobs, results)
+	}
+
+	for j := 1; j <= total_jobs; j++ {
+		jobs <- NextNonce(&block)
+	}
+
+	mined = <-results
+	close(jobs)
 
 	elapsed := time.Since(start)
 	ms := float64(elapsed) / float64(time.Millisecond)
 	fmt.Println(Sprintf(Bold(Cyan("Mined new block in %fms")), Bold(Cyan(ms))))
-	return newBlock
-}
 
-// Add a new block to the current chain
-func AddBlock(chain *[]Block, name string) {
-	l := len(*chain)
-	h := (*chain)[l-1].Hash
-	block := Block{
-		Name:         name,
-		Timestamp:    time.Now(),
-		PreviousHash: h,
-		Nonce:        0,
-	}
-
-	newBlock := MineBlock(block)
-	s := append(*chain, newBlock)
-	printSlice(s)
-}
-
-func printSlice(s []Block) {
-	//fmt.Printf("len=%d cap=%d %v\n", len(s), cap(s), s)
+	return
 }

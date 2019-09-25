@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!--
+Copyright 2018 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Keith Block-Chain</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="salesforce-lightning-design-system.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background-color: #fff;
+      font-family: Salesforce Sans, Arial, sans-serif
+    }
+  </style>
+</head>
+
+<body onload="init()">
+  <script src="wasm_exec.js"></script>
+  <script>
+
+    var previousHash;
+
+      async function init() {
+          const go = new Go();
+          let result = await WebAssembly.instantiateStreaming(fetch("lib.wasm"), go.importObject)
+          go.run(result.instance);
+
+          loadChain();
+      }
+
+      function run() {
+        let chain = localStorage.getItem("keithblockchain") || `{ "blocks": [] }`;
+        const nameInput = document.getElementById('Name');
+        const name = nameInput.value;
+        const block = addBlock(name, previousHash);
+        nameInput.value = ''; 
+        previousHash = block.Hash;
+        if(chain) {
+          chain = JSON.parse(chain)
+        }
+        const blocks = chain.blocks || [];
+        blocks.push(block);
+        localStorage.setItem("keithblockchain", JSON.stringify({ blocks }));
+        renderTemplate({ blocks })
+      }
+
+      function loadChain() {
+        let chain = localStorage.getItem("keithblockchain");
+        if(chain) {
+          chain = JSON.parse(chain);
+          previousHash = chain.blocks[chain.blocks.length - 1].PreviousHash;
+        } else {
+          const genesisBlock = generateGenesisBlock();
+          chain = { blocks : [ genesisBlock ] };
+          previousHash = genesisBlock.Hash;
+          localStorage.setItem("keithblockchain", JSON.stringify(chain));
+        }
+
+        renderTemplate(chain)
+      }
+
+      function renderTemplate(tmpl) {
+        var template = document.querySelector('#template').innerHTML;
+        Mustache.parse(template);   // optional, speeds up future uses
+
+        var rendered = Mustache.render(template, { blocks: tmpl.blocks.reverse() });
+        document.querySelector('#target').innerHTML = rendered;
+      }
+
+      init();
+ </script>
+  
+  <div class="main">
+    <div class="logo"></div>
+    <div class="content">
+      <h1>The Keith Block-Chain... in Go!</h1>
+      <div class="slds-form-element">
+        <label class="slds-form-element__label" for="tooltip-showing-form-element-help-01">Your Name</label>
+        <div class="slds-form-element__control slds-form-element_stacked">
+          <input type="text" id="Name" placeholder="Placeholder Text" class="slds-input" />
+        </div>
+        <div class="slds-form-element__control slds-form-element_stacked">
+          <button class="slds-button slds-button_brand" onClick="run();" id="runButton">Mine New Keith
+            Block</button>
+        </div>
+      </div>
+      <div id="target">Loading...</div>
+    </div>
+    <script id="template" type="x-tmpl-mustache">
+      <ul class="chain">
+        {{#blocks}}
+        <li>
+          <p class="name">{{ Name }}</p>
+          <p class="hash">{{Hash}}</p>
+        </li>
+        {{/blocks}}
+      </ul>
+    </script>
+  </div>
+</body>
+</html>

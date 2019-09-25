@@ -1,0 +1,38 @@
+.main {
+    height: 100%;
+}
+
+.main .logo {
+    background: url('gophercolor.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    height: 100%;
+    background-position: -100px 10%;
+}
+
+.main .content {
+    position: absolute;
+    top: 0;
+    left: 50%
+}
+
+.main h1 {
+    font-size: 3rem;
+    font-weight: 300;
+    line-height: 1.25;
+    color: #54698d;
+}
+
+.chain .hash, .chain .name {
+    font-family: monospace;
+    font-size: 16px;
+}
+
+.chain .hash {
+    color: #666;
+}
+
+#target {
+    margin-top: 40px;
+    text-align: right;
+}

@@ -1,19 +1,35 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"syscall/js"
+)
+
+var done = make(chan struct{}, 0)
 
 func main() {
-	chain := []Block{GenerateGenesisBlock()}
+	c := make(chan bool)
+	js.Global().Set("addBlock", js.FuncOf(addBlock))
+	js.Global().Set("generateGenesisBlock", js.FuncOf(generateGenesisBlock))
+	<-c
+}
 
-	// Pop the last off the block chain.
-	// What you really want to do here is get the chain from storage and get
-	// its latest hash from there
-	h := chain[len(chain)-1].Hash
+func addBlock(this js.Value, args []js.Value) interface{} {
+	message := args[0].String()
+	h := args[1].String()
+	block := AddBlock(message, h)
 
-	// this is a fake block we add
-	// but what would be interesting is to take some input from command line
+	var inInterface map[string]interface{}
+	inrec, _ := json.Marshal(block)
+	json.Unmarshal(inrec, &inInterface)
+	return inInterface
+}
 
-	minedBlock := AddBlock("Ted Conn", h)
-	fmt.Println(minedBlock)
+func generateGenesisBlock(this js.Value, args []js.Value) interface{} {
+	block := GenerateGenesisBlock()
 
+	var inInterface map[string]interface{}
+	inrec, _ := json.Marshal(block)
+	json.Unmarshal(inrec, &inInterface)
+	return inInterface
 }

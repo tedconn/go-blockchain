@@ -85,7 +85,7 @@ func MineBlock(id int, jobs <-chan Block, results chan<- Block) {
 func AddBlock(name string, previousHash string) (mined Block) {
 	start := time.Now()
 	block := Block{
-		Name:         "new name", // get from input
+		Name:         name, // get from input
 		Timestamp:    time.Now(),
 		PreviousHash: previousHash,
 		Nonce:        0,
